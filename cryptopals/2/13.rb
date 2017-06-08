@@ -18,4 +18,10 @@ def decrypt(ciphertext)
   Hash[*(res.split('&').map { |x| x.split '=' }.flatten)]
 end
 
-# WIP
+# ["email=1234567890", "123&uid=10&role=", "user"]
+user = encrypt('1234567890123')
+
+# ["email=1234567890", "admin\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b", "&uid=10&role=use", "r"]
+admin_block = encrypt('1234567890admin' + "\x0b" * 11)[16...32]
+
+puts decrypt(user[0...32] + admin_block)
