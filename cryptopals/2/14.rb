@@ -9,6 +9,8 @@ def encrypt(input)
   cipher.encrypt(Random.new.bytes(Random.new.rand(100)) + input + Base64::decode64($secret))
 end
 
+# WIP
+
 answer = ''
 loop do
   prev = answer

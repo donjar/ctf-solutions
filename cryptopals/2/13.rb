@@ -17,3 +17,5 @@ def decrypt(ciphertext)
   res = cipher.decrypt(ciphertext)
   Hash[*(res.split('&').map { |x| x.split '=' }.flatten)]
 end
+
+# WIP
