@@ -14,7 +14,7 @@ def dec_to_ascii(int)
   end.join
 end
 
-def ctr(text, key, nonce)
+def ctr(text, key, nonce = "\x00" * 8)
   cipher = Mcrypt.new(:rijndael_128, :ecb, key)
 
   text.chars.each_slice(16).each_with_index.map do |blk, idx|
@@ -23,4 +23,4 @@ def ctr(text, key, nonce)
   end.join
 end
 
-puts ctr(Base64::decode64('L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=='), 'YELLOW SUBMARINE', "\x00" * 8)
+# puts ctr(Base64::decode64('L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ=='), 'YELLOW SUBMARINE', "\x00" * 8)
