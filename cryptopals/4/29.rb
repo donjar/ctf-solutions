@@ -10,23 +10,19 @@ def dec_to_ascii(int)
   end.join
 end
 
-def sha1(text, h0 = nil, h1 = nil, h2 = nil, h3 = nil, h4 = nil)
+def sha1_chunked(text, h0 = nil, h1 = nil, h2 = nil, h3 = nil, h4 = nil)
   h0 = 0x67452301 if h0.nil?
   h1 = 0xEFCDAB89 if h1.nil?
   h2 = 0x98BADCFE if h2.nil?
   h3 = 0x10325476 if h3.nil?
   h4 = 0xC3D2E1F0 if h4.nil?
 
-  bit_string = text.unpack1('B*')
-  ml = bit_string.length
+  result = []
 
-  # Pre-processing
-  bit_string += '1'
-  loop do
-    break if bit_string.length % 512 == 448
-    bit_string += '0'
-  end
-  bit_string += ml.to_s(2).rjust(64, '0')
+  bit_string = sha1_pad(text.unpack1('B*'))
+
+  puts 'Bit string'
+  puts bit_string.chars.each_slice(512).map(&:join)
 
   bit_string.chars.each_slice(512) do |chunk|
     # Extend 16 32-bit words to 80 32-bit words
@@ -73,11 +69,58 @@ def sha1(text, h0 = nil, h1 = nil, h2 = nil, h3 = nil, h4 = nil)
     h2 = (h2 + c) & 0xffffffff
     h3 = (h3 + d) & 0xffffffff
     h4 = (h4 + e) & 0xffffffff
-  end
 
-  ((h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4).to_s(16)
+    result << [h0, h1, h2, h3, h4]
+  end
+  result
+end
+
+def sha1(message, h0 = nil, h1 = nil, h2 = nil, h3 = nil, h4 = nil)
+  res = sha1_chunked(message, h0, h1, h2, h3, h4)
+  res.last.map { |i| i.to_s(16) }.join
 end
 
 def sha1_mac(message, key)
   sha1(key + message)
 end
+
+def sha1_pad(bin_msg)
+  ml = bin_msg.length
+  res = bin_msg.clone
+
+  res += '1'
+  loop do
+    break if res.length % 512 == 448
+    res += '0'
+  end
+  res += ml.to_s(2).rjust(64, '0')
+end
+
+key = 'amelia'
+msg = 'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'
+hash = sha1_mac(msg, key)
+
+forged = ';admin=true;'.encode('ascii-8bit')
+
+# new_text = pad(key + msg) + forged
+new_text = key + msg
+new_text = [sha1_pad(new_text.unpack1('B*'))].pack('B*')
+new_text += forged
+
+state = hash.chars.each_slice(8).map { |c| c.join.to_i(16) }
+
+# forged_text = last part of new_text
+forged_bits = forged.unpack1('B*')
+forged_bits += '1'
+loop do
+  break if forged_bits.length % 512 == 448
+  forged_bits += '0'
+end
+
+forged_length = ((key + msg).length / 64.0).ceil * 64 + forged.length
+forged_bits += (forged_length * 8).to_s(2).rjust(64, '0')
+
+forged_text = [forged_bits].pack('B*')
+
+p sha1_chunked(forged_text, *state)[0].map { |x| x.to_s(16) }.join
+p sha1(new_text)
