@@ -51,5 +51,6 @@ ms1 = n2 * n3
 ms2 = n3 * n1
 ms3 = n1 * n2
 
-res = (c1 * ms1 * GMP::Z.new(ms1).invert(n1) + c2 * ms2 * GMP::Z.new(ms2).invert(n2) + c3 * ms3 * GMP::Z.new(ms3).invert(n3))
+res = (c1 * ms1 * GMP::Z.new(ms1).invert(n1) + c2 * ms2 * GMP::Z.new(ms2).invert(n2) + c3 * ms3 * GMP::Z.new(ms3).invert(n3)).fmod(n1 * n2 * n3)
 puts res.root(3)
+p dec_to_ascii res.root(3).to_i
