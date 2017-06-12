@@ -28,7 +28,7 @@ server_v = g.powmod(x, N)
 
 # C -> S, S -> C
 $B = (k * server_v + g.powmod(s, N)).fmod(N)
-$A = g.powmod(c, N)
+$A = 100 * N # MALICIOUS
 
 # Compute u
 u = Digest::SHA256.hexdigest(dec_to_ascii($A) + dec_to_ascii($B)).to_i(16)
@@ -36,10 +36,13 @@ u = Digest::SHA256.hexdigest(dec_to_ascii($A) + dec_to_ascii($B)).to_i(16)
 # Compute S and K
 client_S = GMP::Z.new($B - k * g.powmod(x, N)).powmod(c + u * x, N)
 server_S = GMP::Z.new($A * GMP::Z.new(server_v).powmod(u, N)).powmod(s, N)
-client_K = Digest::SHA256.digest dec_to_ascii client_S.to_i
+client_K = Digest::SHA256.digest "\x00" # MALICIOUS
 server_K = Digest::SHA256.digest dec_to_ascii server_S.to_i
 
 # Get hash
 client_H = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), client_K, $salt)
 server_H = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha256'), server_K, $salt)
 puts(client_H == server_H ? 'ok' : 'no')
+
+# From the IETF docs:
+# The server MUST abort the handshake with an "illegal_parameter" alert if A % N = 0.
